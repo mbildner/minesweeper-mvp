@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <title>Minesweeper</title>
+    <style>
+      .box {
+        float: left;
+        width: 5%;
+        height: 100%;
+        outline: 1px solid black;
+          background-color: grey;
+      }
+
+      .row {
+          height: 5%;
+      }
+
+      #root-element {
+        width: 400px;
+          height: 400px;
+
+      }
+
+      .exposed.bomb {
+        background-color: red;
+      }
+
+      .exposed {
+        background-color: white;
+      }
+
+      .neighbor {
+        background-color: orange;
+      }
+
+      .considering {
+        background-color: purple;
+      }
+
+      .flagged {
+        background-color: lime;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="app.js"></script>
+  </body>
+</html>
