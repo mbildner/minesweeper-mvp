@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function(){
   bootstrapGame(root);
 });
 
-function makeGrid (rowSize, colSize, callback) {
+function makeModel (rowSize, colSize, callback) {
   'use strict';
   var i,
   j,
@@ -23,8 +23,12 @@ function makeGrid (rowSize, colSize, callback) {
     }
     grid.push(row);
   }
-  return grid;
+
+  return {
+    grid: grid
+  };
 }
+
 
 function bootstrapGame (root, gameModel) {
   'use strict';
@@ -38,7 +42,7 @@ function bootstrapGame (root, gameModel) {
   var GRID_SIZE = 20;
   var TOTAL_MINES = 40;
 
-  var grid = makeGrid(GRID_SIZE, GRID_SIZE, function(rowIndex, colIndex){
+  var model = makeModel(GRID_SIZE, GRID_SIZE, function(rowIndex, colIndex){
     return {
       row: rowIndex,
       col: colIndex,
@@ -72,7 +76,7 @@ function bootstrapGame (root, gameModel) {
     };
   });
 
-  grid.forEach(function(row, r){
+  model.grid.forEach(function(row, r){
     var rowDiv = document.createElement('div');
     rowDiv.classList.add('row');
     root.appendChild(rowDiv);
@@ -111,7 +115,7 @@ function bootstrapGame (root, gameModel) {
     var r = rand();
     var c = rand();
 
-    var box = grid[r][c];
+    var box = model.grid[r][c];
 
     if (box.bomb) {
       continue;
@@ -152,7 +156,7 @@ function bootstrapGame (root, gameModel) {
     for (var r=indices.row.min; r<=indices.row.max; r++) {
       for (var c=indices.col.min; c<= indices.col.max; c++) {
         if (r !== box.row || c !== box.col) {
-          boxes.push(grid[r][c]);
+          boxes.push(model.grid[r][c]);
         }
       }
     }
@@ -215,11 +219,11 @@ function bootstrapGame (root, gameModel) {
     r = +r;
     c = +c;
 
-    var box = grid[r][c];
+    var box = model.grid[r][c];
 
     if (event.metaKey) {
       box.flag = !box.flag;
-      renderGrid(grid);
+      renderGrid(model.grid);
       return;
     }
 
@@ -237,7 +241,7 @@ function bootstrapGame (root, gameModel) {
 
     // only fire once
     event.stopPropagation();
-    renderGrid(grid);
+    renderGrid(model.grid);
 
   }
   root.addEventListener('click', handleClick);
