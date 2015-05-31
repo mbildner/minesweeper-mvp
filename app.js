@@ -26,6 +26,42 @@ function makeModel (ROW_SIZE, COL_SIZE, callback) {
 
   return {
     grid: grid,
+    isAlone: function(r,c){
+      var that = this;
+      return that.getNeighboringBombs(r, c) === 0;
+    },
+    sweepFrom: function(r,c){
+      var that = this;
+      if (!that.isAlone(r,c)) { return ;}
+
+      that.getNeighbors(r,c).forEach(function(b){
+        if (b.isExposed()) { return ;}
+        if(!that.isAlone(b.row, b.col)) { return ;}
+        b.expose();
+        that.sweepFrom(b.row, b.col);
+      });
+    },
+    getNeighboringBombs: function(r, c){
+      var that = this;
+      return that.getNeighbors(r, c).filter(function(b){
+        return b.isBomb();
+      }).length;
+    },
+    getNeighbors: function(row, col){
+      var that = this;
+      var indices = that.boundingIndices(row, col);
+      var boxes = [];
+
+      for (var r=indices.row.min; r<=indices.row.max; r++) {
+        for (var c=indices.col.min; c<= indices.col.max; c++) {
+          if (r !== box.row || c !== box.col) {
+            boxes.push(that.grid[r][c]);
+          }
+        }
+      }
+
+      return boxes;
+    },
     boundingIndices: function (r, c) {
       var maxRowSize = ROW_SIZE - 1;
       var maxColSize = COL_SIZE - 1;
@@ -77,15 +113,6 @@ function bootstrapGame (root, gameModel) {
       },
       isBomb: function (){
         return this.bomb;
-      },
-      neighbors: function(){
-        return getNeighbors(this);
-      },
-      neighboringBombs: function (){
-        return getNeighboringBombs(this);
-      },
-      isAlone: function(){
-        return isAlone(this);
       },
       element: function (){
         var qsString = '[data-row="{row}"][data-col="{col}"]'
@@ -147,50 +174,6 @@ function bootstrapGame (root, gameModel) {
   }
 
 
-  function isAlone (box) {
-    return getNeighboringBombs(box) === 0;
-  }
-
-  function getNeighbors (box) {
-    var indices = model.boundingIndices(box.row, box.col);
-    var boxes = [];
-
-    for (var r=indices.row.min; r<=indices.row.max; r++) {
-      for (var c=indices.col.min; c<= indices.col.max; c++) {
-        if (r !== box.row || c !== box.col) {
-          boxes.push(model.grid[r][c]);
-        }
-      }
-    }
-
-    // assert for safety
-    if(boxes.some(function(box){
-      return !box;
-    })) {
-
-      throw new Error('Neighbors would have returned a sparse array, this is a problem');
-    }
-
-    return boxes;
-  }
-
-  function getNeighboringBombs (box) {
-    return getNeighbors(box).filter(function(b){
-      return b.isBomb();
-    }).length;
-  }
-
-  function sweepFromBox (box) {
-    if (!box.isAlone()) { return ;}
-
-    box.neighbors().forEach(function(b){
-      if (b.isExposed()) { return ;}
-      if (!b.isAlone()) { return ;}
-      b.expose();
-      sweepFromBox(b);
-    });
-  }
-
 
   function renderGrid (grid){
     grid.forEach(function(row){
@@ -246,8 +229,9 @@ function bootstrapGame (root, gameModel) {
       return;
     }
 
-    boxElement.textContent = box.neighboringBombs() ? box.neighboringBombs() : '';
-    sweepFromBox(box);
+
+    boxElement.textContent = model.getNeighboringBombs(box.row, box.col) ? model.getNeighboringBombs(box.row, box.col) : '';
+    model.sweepFrom(box.row, box.col);
 
     // only fire once
     event.stopPropagation();
