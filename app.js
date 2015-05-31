@@ -86,21 +86,10 @@ function makeModel (ROW_SIZE, COL_SIZE, callback) {
   };
 }
 
-
-function bootstrapGame (root, gameModel) {
+function makeBox (rowIndex, colIndex) {
   'use strict';
-
-  root.removeEventListener(handleClick);
-
-  while (root.children.length) {
-    root.removeChild(root.children[0]);
-  }
-
-  var GRID_SIZE = 20;
-  var TOTAL_MINES = 40;
-
-  var model = makeModel(GRID_SIZE, GRID_SIZE, function(rowIndex, colIndex){
-    return {
+  var that = this;
+  return {
       row: rowIndex,
       col: colIndex,
       exposed: false,
@@ -121,8 +110,22 @@ function bootstrapGame (root, gameModel) {
 
         return document.querySelector(qsString);
       }
-    };
-  });
+  };
+}
+
+function bootstrapGame (root, gameModel) {
+  'use strict';
+
+  root.removeEventListener(handleClick);
+
+  while (root.children.length) {
+    root.removeChild(root.children[0]);
+  }
+
+  var GRID_SIZE = 20;
+  var TOTAL_MINES = 40;
+
+  var model = makeModel(GRID_SIZE, GRID_SIZE, makeBox);
 
   model.grid.forEach(function(row, r){
     var rowDiv = document.createElement('div');
