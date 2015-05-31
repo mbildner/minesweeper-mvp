@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function(){
   bootstrapGame(root);
 });
 
-function makeModel (rowSize, colSize, callback) {
+function makeModel (ROW_SIZE, COL_SIZE, callback) {
   'use strict';
   var i,
   j,
@@ -15,9 +15,9 @@ function makeModel (rowSize, colSize, callback) {
   box;
 
   grid = [];
-  for(i=0; i<rowSize; i++) {
+  for(i=0; i<ROW_SIZE; i++) {
     row = [];
-    for(j=0; j<colSize; j++) {
+    for(j=0; j<COL_SIZE; j++) {
       box = callback ? callback(i, j) : {};
       row.push(box);
     }
@@ -25,7 +25,28 @@ function makeModel (rowSize, colSize, callback) {
   }
 
   return {
-    grid: grid
+    grid: grid,
+    boundingIndices: function (r, c) {
+      var maxRowSize = ROW_SIZE - 1;
+      var maxColSize = COL_SIZE - 1;
+
+      var maxRow = r === maxRowSize ? maxRowSize - 1 : r + 1;
+      var maxCol = c === maxColSize ? maxColSize - 1 : c + 1;
+
+      var minRow = r === 0 ? 0 : r - 1;
+      var minCol = c === 0 ? 0 : c - 1;
+
+      return {
+        row: {
+          min: minRow,
+          max: maxRow
+        },
+        col: {
+          min: minCol,
+          max: maxCol
+        }
+      };
+    }
   };
 }
 
@@ -125,32 +146,13 @@ function bootstrapGame (root, gameModel) {
     bombsToPlace--;
   }
 
-  function boundingIndices (r, c) {
-    var maxRow = r === 19 ? 19 : r + 1;
-    var maxCol = c === 19 ? 19 : c + 1;
-
-    var minRow = r === 0 ? 0 : r - 1;
-    var minCol = c === 0 ? 0 : c - 1;
-
-    return {
-      row: {
-        min: minRow,
-        max: maxRow
-      },
-      col: {
-        min: minCol,
-        max: maxCol
-      }
-    };
-  }
 
   function isAlone (box) {
     return getNeighboringBombs(box) === 0;
   }
 
   function getNeighbors (box) {
-    var indices = boundingIndices(box.row, box.col);
-
+    var indices = model.boundingIndices(box.row, box.col);
     var boxes = [];
 
     for (var r=indices.row.min; r<=indices.row.max; r++) {
@@ -159,6 +161,14 @@ function bootstrapGame (root, gameModel) {
           boxes.push(model.grid[r][c]);
         }
       }
+    }
+
+    // assert for safety
+    if(boxes.some(function(box){
+      return !box;
+    })) {
+
+      throw new Error('Neighbors would have returned a sparse array, this is a problem');
     }
 
     return boxes;
