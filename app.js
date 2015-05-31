@@ -1,3 +1,8 @@
+function rand (max){
+  'use strict';
+  return Math.floor(Math.random() * max);
+}
+
 document.addEventListener('DOMContentLoaded', function(){
   'use strict';
   var root = document.createElement('div');
@@ -5,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function(){
   document.body.appendChild(root);
   bootstrapGame(root);
 });
+
 
 function makeModel (ROW_SIZE, COL_SIZE, callback) {
   'use strict';
@@ -26,6 +32,36 @@ function makeModel (ROW_SIZE, COL_SIZE, callback) {
 
   return {
     grid: grid,
+    setMines: function(totalMines) {
+      var that = this;
+      var flaggedMines = 0;
+
+      var unflaggedMines = totalMines - flaggedMines;
+
+      var bombsToPlace = totalMines;
+      var tries = 0;
+
+      // todo improve bomb seeding: favors the top right like crazy
+      while (bombsToPlace) {
+        tries++;
+        if (tries > 1000) { throw new Error('breaking to prevent infinite loop'); }
+
+        var r = rand(that.grid.length);
+        var c = rand(that.grid[0].length);
+
+        var box = that.grid[r][c];
+
+        if (box.bomb) {
+          continue;
+        }
+
+        box.bomb = true;
+        bombsToPlace--;
+
+      }
+
+
+    },
     isAlone: function(r,c){
       var that = this;
       return that.getNeighboringBombs(r, c) === 0;
@@ -90,26 +126,26 @@ function makeBox (rowIndex, colIndex) {
   'use strict';
   var that = this;
   return {
-      row: rowIndex,
-      col: colIndex,
-      exposed: false,
-      bomb: false,
-      expose: function(){
-        this.exposed = true;
-      },
-      isExposed: function (){
-        return this.exposed;
-      },
-      isBomb: function (){
-        return this.bomb;
-      },
-      element: function (){
-        var qsString = '[data-row="{row}"][data-col="{col}"]'
-        .replace('{row}', this.row)
-        .replace('{col}', this.col);
+    row: rowIndex,
+    col: colIndex,
+    exposed: false,
+    bomb: false,
+    expose: function(){
+      this.exposed = true;
+    },
+    isExposed: function (){
+      return this.exposed;
+    },
+    isBomb: function (){
+      return this.bomb;
+    },
+    element: function (){
+      var qsString = '[data-row="{row}"][data-col="{col}"]'
+      .replace('{row}', this.row)
+      .replace('{col}', this.col);
 
-        return document.querySelector(qsString);
-      }
+      return document.querySelector(qsString);
+    }
   };
 }
 
@@ -142,39 +178,9 @@ function bootstrapGame (root, gameModel) {
   });
 
 
-  function rand (){
-    return Math.floor(Math.random() * GRID_SIZE);
-  }
 
-  // move to cleaner initializer
-  var totalFlags = 10;
-  var flagsUsed = 0;
+  model.setMines(TOTAL_MINES, model);
 
-  var totalMines = TOTAL_MINES;
-  var flaggedMines = 0;
-
-  var unflaggedMines = totalMines - flaggedMines;
-
-  var bombsToPlace = totalMines;
-  var tries = 0;
-
-  // todo improve bomb seeding: favors the top right like crazy
-  while (bombsToPlace) {
-    tries++;
-    if (tries > 1000) { throw new Error('breaking to prevent infinite loop'); }
-
-    var r = rand();
-    var c = rand();
-
-    var box = model.grid[r][c];
-
-    if (box.bomb) {
-      continue;
-    }
-
-    box.bomb = true;
-    bombsToPlace--;
-  }
 
 
 
