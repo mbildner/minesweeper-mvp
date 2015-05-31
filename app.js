@@ -6,6 +6,26 @@ document.addEventListener('DOMContentLoaded', function(){
   bootstrapGame(root);
 });
 
+function makeGrid (rowSize, colSize, callback) {
+  'use strict';
+  var i,
+  j,
+  grid,
+  row,
+  box;
+
+  grid = [];
+  for(i=0; i<rowSize; i++) {
+    row = [];
+    for(j=0; j<colSize; j++) {
+      box = callback ? callback(i, j) : {};
+      row.push(box);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+
 function bootstrapGame (root, gameModel) {
   'use strict';
 
@@ -15,50 +35,42 @@ function bootstrapGame (root, gameModel) {
     root.removeChild(root.children[0]);
   }
 
-  var row;
-
   var GRID_SIZE = 20;
   var TOTAL_MINES = 40;
 
-  var grid = [];
+  var grid = makeGrid(GRID_SIZE, GRID_SIZE, function(rowIndex, colIndex){
+    return {
+      row: rowIndex,
+      col: colIndex,
+      exposed: false,
+      bomb: false,
+      expose: function(){
+        this.exposed = true;
+      },
+      isExposed: function (){
+        return this.exposed;
+      },
+      isBomb: function (){
+        return this.bomb;
+      },
+      neighbors: function(){
+        return getNeighbors(this);
+      },
+      neighboringBombs: function (){
+        return getNeighboringBombs(this);
+      },
+      isAlone: function(){
+        return isAlone(this);
+      },
+      element: function (){
+        var qsString = '[data-row="{row}"][data-col="{col}"]'
+        .replace('{row}', this.row)
+        .replace('{col}', this.col);
 
-  for (var i=0; i<GRID_SIZE; i++) {
-    row = [];
-    for (var j=0; j<GRID_SIZE; j++) {
-      row.push({
-        row: i,
-        col: j,
-        exposed: false,
-        bomb: false,
-        expose: function(){
-          this.exposed = true;
-        },
-        isExposed: function (){
-          return this.exposed;
-        },
-        isBomb: function (){
-          return this.bomb;
-        },
-        neighbors: function(){
-          return getNeighbors(this);
-        },
-        neighboringBombs: function (){
-          return getNeighboringBombs(this);
-        },
-        isAlone: function(){
-          return isAlone(this);
-        },
-        element: function (){
-          var qsString = '[data-row="{row}"][data-col="{col}"]'
-          .replace('{row}', this.row)
-          .replace('{col}', this.col);
-
-          return document.querySelector(qsString);
-        }
-      });
-    }
-    grid.push(row);
-  }
+        return document.querySelector(qsString);
+      }
+    };
+  });
 
   grid.forEach(function(row, r){
     var rowDiv = document.createElement('div');
